@@ -6,8 +6,8 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as Toolbar
 from matplotlib.pyplot import subplots
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget,             \
-    QGridLayout, QGroupBox, QHBoxLayout, QSpinBox, QVBoxLayout,             \
-    QProgressBar, QPushButton, QDesktopWidget, QLabel
+    QGroupBox, QHBoxLayout, QSpinBox, QVBoxLayout, QProgressBar,            \
+    QPushButton, QDesktopWidget, QLabel
 from random import random
 from sys import argv, exit
 
@@ -38,7 +38,7 @@ class PathPlot(CustomCanvas):
 
     def create_figure(self):
         xpos, ypos = self.data
-        self.axes.set_title("Last random walk")
+        self.axes.set_title("Random walk")
         self.axes.plot(xpos, ypos)
         self.axes.plot(xpos, ypos, 'b.', markersize=2)
         self.axes.plot(xpos[0], ypos[0], marker='$S$')
@@ -49,7 +49,7 @@ class DistPlot(CustomCanvas):
 
     def create_figure(self):
         dist, expt = self.data
-        self.axes.set_title("Last distance comparison")
+        self.axes.set_title("Distance comparison")
         rn, = self.axes.plot(dist, label='d')
         ex, = self.axes.plot(expt, label='√n')
         self.axes.legend(handles=[rn, ex], loc='upper left')
@@ -91,14 +91,14 @@ class ApplicationWindow(QMainWindow):
         self.setWindowTitle("Drunkard's Walk Simulator")
 
         self.it_box = QSpinBox()
-        self.it_box.setMaximum((1 << 31) - 1)
-        self.it_box.setSingleStep(10)
-        self.it_box.setValue(500)
+        self.it_box.setRange(1, (1 << 31) - 1)
+        self.it_box.setSingleStep(100)
+        self.it_box.setValue(2000)
 
         self.rp_box = QSpinBox()
-        self.rp_box.setMaximum((1 << 31) - 1)
-        self.rp_box.setSingleStep(5)
-        self.rp_box.setValue(100)
+        self.rp_box.setRange(1, (1 << 31) - 1)
+        self.rp_box.setSingleStep(10)
+        self.rp_box.setValue(1)
 
         self.start_button = QPushButton("Start", self)
         self.start_button.clicked.connect(self.process_data)
@@ -126,8 +126,8 @@ class ApplicationWindow(QMainWindow):
         param_layout.addWidget(pr_group)
 
         self.main_widget = QWidget(self)
-        self.main_layout = QGridLayout(self.main_widget)
-        self.main_layout.addWidget(parameters, 0, 0)
+        self.main_layout = QHBoxLayout(self.main_widget)
+        self.main_layout.addWidget(parameters)
         self.setCentralWidget(self.main_widget)
 
     def process_data(self):
@@ -149,18 +149,21 @@ class ApplicationWindow(QMainWindow):
     def add_graphs(self, xpos, ypos, dist, expt, rdis):
 
         self.start_button.setText("Quit")
-        self.main_layout.addWidget(HistPlot(rdis), 0, 1)
-        self.main_layout.addWidget(PathPlot(xpos, ypos), 1, 0)
-        self.main_layout.addWidget(DistPlot(dist, expt), 1, 1)
+        if len(rdis) > 1:
+            self.main_layout.addWidget(HistPlot(rdis))
+            self.resize(640, 432)
+        else:
+            self.main_layout.addWidget(PathPlot(xpos, ypos))
+            self.main_layout.addWidget(DistPlot(dist, expt))
+            self.resize(1152, 432)
+            dist_label = QLabel("Difference between distances: {:.2f} units"
+                                .format(rdis[-1]))
+            dist_label.setAlignment(Qt.AlignRight)
+            self.statusBar().addWidget(dist_label, 1)
+
         resolution = QDesktopWidget().screenGeometry()
-        self.resize(1024, 768)
         self.move((resolution.width() / 2) - (self.frameSize().width() / 2),
                   (resolution.height() / 2) - (self.frameSize().height() / 2))
-
-        dist_label = QLabel("Last difference between distances: {:.2f} units"
-                            .format(rdis[-1]))
-        dist_label.setAlignment(Qt.AlignRight)
-        self.statusBar().addWidget(dist_label, 1)
         self.statusBar().showMessage(
                 'Left click and drag to pan, right click and drag to zoom')
 
