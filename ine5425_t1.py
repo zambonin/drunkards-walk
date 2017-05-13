@@ -4,7 +4,7 @@ from math import cos, sin
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as Toolbar
 from matplotlib.pyplot import subplots
-from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget,             \
     QGroupBox, QHBoxLayout, QSpinBox, QVBoxLayout, QProgressBar,            \
     QPushButton, QDesktopWidget, QLabel
@@ -89,6 +89,7 @@ class ApplicationWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setWindowTitle("Drunkard's Walk Simulator")
+        self.setFixedSize(QSize(225, 275))
 
         self.it_box = QSpinBox()
         self.it_box.setRange(1, (1 << 31) - 1)
@@ -151,11 +152,11 @@ class ApplicationWindow(QMainWindow):
         self.start_button.setText("Quit")
         if len(rdis) > 1:
             self.main_layout.addWidget(HistPlot(rdis))
-            self.resize(640, 432)
+            self.setFixedSize(QSize(640, 432))
         else:
             self.main_layout.addWidget(PathPlot(xpos, ypos))
             self.main_layout.addWidget(DistPlot(dist, expt))
-            self.resize(1152, 432)
+            self.setFixedSize(QSize(1152, 432))
             dist_label = QLabel("Difference between distances: {:.2f} units"
                                 .format(rdis[-1]))
             dist_label.setAlignment(Qt.AlignRight)
