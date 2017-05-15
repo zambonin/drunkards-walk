@@ -8,7 +8,7 @@ from PyQt5.QtCore import QThread, pyqtSignal, Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget,             \
     QGroupBox, QHBoxLayout, QSpinBox, QVBoxLayout, QProgressBar,            \
     QPushButton, QDesktopWidget, QLabel
-from random import random
+from random import randint
 from sys import argv, exit
 
 
@@ -31,7 +31,7 @@ class HistPlot(CustomCanvas):
     def create_figure(self):
         rdis, = self.data
         self.axes.set_title("Histogram for $r \\times (d_n - i \sqrt{n})$")
-        self.axes.hist(rdis, min(int(len(rdis) ** .5), 30))
+        self.axes.hist(rdis, min(int(len(rdis) ** .5), 30), edgecolor='k')
 
 
 class PathPlot(CustomCanvas):
@@ -58,6 +58,7 @@ class DistPlot(CustomCanvas):
 class MonteCarloSim(QThread):
 
     prr_signal = pyqtSignal(int)
+    pri_signal = pyqtSignal(int)
     plt_signal = pyqtSignal(list, list, list, list, list)
 
     def __init__(self, replications, iterations):
@@ -73,12 +74,15 @@ class MonteCarloSim(QThread):
         for r in range(self.replications):
             xpos, ypos, dist, expt = ([0] * self.iterations for _ in range(4))
             for i in range(self.iterations):
-                angle = int(random() * 360)
+                angle = randint(0, 360)
                 xpos[i] = xpos[i - 1] + (i + 1) * cos(angle)
                 ypos[i] = ypos[i - 1] + (i + 1) * sin(angle)
                 dist[i] = (xpos[i] ** 2 + ypos[i] ** 2) ** .5
                 expt[i] = self.iterations * (i ** .5)
-            rdis[r] = dist[-1] - expt[-1]
+                if self.replications == 1:
+                    self.pri_signal.emit(i + 1)
+
+            rdis[r] = abs(dist[-1] - expt[-1])
             self.prr_signal.emit(r + 1)
 
         self.plt_signal.emit(xpos, ypos, dist, expt, rdis)
@@ -140,10 +144,15 @@ class ApplicationWindow(QMainWindow):
         self.start_button.clicked.connect(self.close)
 
         r, i = self.rp_box.value(), self.it_box.value()
-        self.prr_bar.setMaximum(r)
-
         self.thread = MonteCarloSim(r, i)
-        self.thread.prr_signal.connect(self.prr_bar.setValue)
+
+        if r != 1:
+            self.prr_bar.setMaximum(r)
+            self.thread.prr_signal.connect(self.prr_bar.setValue)
+        else:
+            self.prr_bar.setMaximum(i)
+            self.thread.pri_signal.connect(self.prr_bar.setValue)
+
         self.thread.plt_signal.connect(self.add_graphs)
         self.thread.start()
 
