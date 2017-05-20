@@ -8,4 +8,8 @@ and install the requirements with
 and then get `tkinter` (`python-tk`, `tk`) with your favourite
 package manager.
 
-Then, run the script and click around.
+Then, execute it with
+
+    $ python -m drwalk
+
+and click around.

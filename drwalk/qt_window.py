@@ -1,91 +1,10 @@
 #!/usr/bin/env python
 
-from math import cos, sin
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FCanvas
-from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as Toolbar
-from matplotlib.pyplot import subplots
-from PyQt5.QtCore import QThread, pyqtSignal, Qt, QSize
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget,             \
-    QGroupBox, QHBoxLayout, QSpinBox, QVBoxLayout, QProgressBar,            \
-    QPushButton, QDesktopWidget, QLabel
-from random import randint
-from sys import argv, exit
-
-
-class CustomCanvas(FCanvas):
-
-    def __init__(self, *data):
-        fig, self.axes = subplots()
-        self.axes.ticklabel_format(style='sci', scilimits=(0, 0))
-        self.data = data
-        self.create_figure()
-        super().__init__(fig)
-        Toolbar(self, None).pan()
-
-    def create_figure(self):
-        pass
-
-
-class HistPlot(CustomCanvas):
-
-    def create_figure(self):
-        rdis, = self.data
-        self.axes.set_title("Histogram for $r \\times (d_n - i \sqrt{n})$")
-        self.axes.hist(rdis, min(int(len(rdis) ** .5), 30), edgecolor='k')
-
-
-class PathPlot(CustomCanvas):
-
-    def create_figure(self):
-        xpos, ypos = self.data
-        self.axes.set_title("Random walk")
-        self.axes.plot(xpos, ypos)
-        self.axes.plot(xpos, ypos, 'b.', markersize=2)
-        self.axes.plot(xpos[0], ypos[0], marker='$S$')
-        self.axes.plot(xpos[-1], ypos[-1], marker='$E$')
-
-
-class DistPlot(CustomCanvas):
-
-    def create_figure(self):
-        dist, expt = self.data
-        self.axes.set_title("Distance comparison")
-        rn, = self.axes.plot(dist, label='d')
-        ex, = self.axes.plot(expt, label='√n')
-        self.axes.legend(handles=[rn, ex], loc='upper left')
-
-
-class MonteCarloSim(QThread):
-
-    prr_signal = pyqtSignal(int)
-    pri_signal = pyqtSignal(int)
-    plt_signal = pyqtSignal(list, list, list, list, list)
-
-    def __init__(self, replications, iterations):
-        super().__init__()
-        self.replications = replications
-        self.iterations = iterations
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        rdis = [0] * self.replications
-        for r in range(self.replications):
-            xpos, ypos, dist, expt = ([0] * self.iterations for _ in range(4))
-            for i in range(self.iterations):
-                angle = randint(0, 360)
-                xpos[i] = xpos[i - 1] + (i + 1) * cos(angle)
-                ypos[i] = ypos[i - 1] + (i + 1) * sin(angle)
-                dist[i] = (xpos[i] ** 2 + ypos[i] ** 2) ** .5
-                expt[i] = self.iterations * (i ** .5)
-                if self.replications == 1:
-                    self.pri_signal.emit(i + 1)
-
-            rdis[r] = abs(dist[-1] - expt[-1])
-            self.prr_signal.emit(r + 1)
-
-        self.plt_signal.emit(xpos, ypos, dist, expt, rdis)
+from .custom_canvas import DistPlot, HistPlot, PathPlot
+from .monte_carlo import MonteCarloSim
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout, QLabel, \
+    QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
 
 
 class ApplicationWindow(QMainWindow):
@@ -105,7 +24,7 @@ class ApplicationWindow(QMainWindow):
         self.rp_box.setSingleStep(10)
         self.rp_box.setValue(1)
 
-        self.start_button = QPushButton("Start", self)
+        self.start_button = QPushButton("Start", self, default=True)
         self.start_button.clicked.connect(self.process_data)
 
         self.prr_bar = QProgressBar()
@@ -135,8 +54,11 @@ class ApplicationWindow(QMainWindow):
         self.main_layout.addWidget(parameters)
         self.setCentralWidget(self.main_widget)
 
-    def process_data(self):
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_Return:
+            self.process_data()
 
+    def process_data(self):
         self.rp_box.setEnabled(False)
         self.it_box.setEnabled(False)
         self.start_button.setText("Abort/quit")
@@ -157,7 +79,6 @@ class ApplicationWindow(QMainWindow):
         self.thread.start()
 
     def add_graphs(self, xpos, ypos, dist, expt, rdis):
-
         self.start_button.setText("Quit")
         if len(rdis) > 1:
             self.main_layout.addWidget(HistPlot(rdis))
@@ -176,10 +97,3 @@ class ApplicationWindow(QMainWindow):
                   (resolution.height() / 2) - (self.frameSize().height() / 2))
         self.statusBar().showMessage(
                 'Left click and drag to pan, right click and drag to zoom')
-
-
-if __name__ == '__main__':
-    app = QApplication(argv)
-    aw = ApplicationWindow()
-    aw.show()
-    exit(app.exec_())
