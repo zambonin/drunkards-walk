@@ -1,4 +1,33 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""qt_window.py
+
+Class that holds the configurations for the program window and its
+modifications after specific triggers.
+
+    * `PyQt5.QtCore.QSize` defines the size of the window.
+    * `PyQt5.QtCore.Qt` holds various enumerations and constants,
+        such as alignment options and keyboard keys.
+    * `PyQt5.QtWidgets.QDesktopWidget` provides access to the
+        screen resolution.
+    * `PyQt5.QtWidgets.QGroupBox` provides a frame, a title on top
+        and the ability of displaying various widgets inside itself.
+    * `PyQt5.QtWidgets.QHBoxLayout` lines up widgets horizontally.
+    * `PyQt5.QtWidgets.QLabel` displays text or image without user
+        interaction.
+    * `PyQt5.QtWidgets.QMainWindow` provides a main window.
+    * `PyQt5.QtWidgets.QProgressBar` provides a progress bar, that gives
+        the user an indication that the application is still running.
+    * `PyQt5.QtWidgets.QPushButton` provides a command button that may
+        execute some action.
+    * `PyQt5.QtWidgets.QSpinBox` allows the user to choose a value by
+        clicking the up/down buttons or pressing up/down on the keyboard.
+        The user may also input the value manually.
+    * `PyQt5.QtWidgets.QVBoxLayout` lines up widgets vertically.
+    * `PyQt5.QtWidgets.QWidget` is the base class of all user interface
+        objects.
+"""
 
 from .custom_canvas import DistPlot, HistPlot, PathPlot
 from .monte_carlo import MonteCarloSim
@@ -7,11 +36,28 @@ from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout, QLabel, \
     QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
 
 
-class ApplicationWindow(QMainWindow):
-
+class AppWindow(QMainWindow):
+    """
+    The project's custom window, with responsibilities such as displaying
+    graphics and handling user input.
+    """
     def __init__(self):
-        QMainWindow.__init__(self)
-        self.setWindowTitle("Drunkard's Walk Simulator")
+        """
+        Initializes the AppWindow object with the following attributes:
+
+            it_box:         spin box for the number of iterations.
+            rp_box:         spin box for the number of replications.
+            start_button:   button that controls the entire program.
+            prr_bar:        bar that displays the progress of computations.
+            main_widget:    dominant widget that holds all the other ones.
+            main_layout:    layout for the dominant widget.
+
+        All the configurations for the starting window are done here, such
+        as its initial size, ranges and default values for the spin boxes,
+        actions and layouts for the widgets.
+        """
+        super().__init__()
+        self.setWindowTitle("Random Walk Simulator")
         self.setFixedSize(QSize(225, 275))
 
         self.it_box = QSpinBox()
@@ -55,10 +101,27 @@ class ApplicationWindow(QMainWindow):
         self.setCentralWidget(self.main_widget)
 
     def keyPressEvent(self, e):
+        """
+        Handles key presses while the window is focused. One can start the
+        computing by pressing Enter, and quit at any time by pressing
+        Esc or Enter.
+
+        Args:
+            e:  an abstract object representing an event.
+        """
         if e.key() == Qt.Key_Return:
             self.process_data()
+        elif e.key() == Qt.Key_Escape:
+            self.close()
 
     def process_data(self):
+        """
+        Intermission before displaying the output graphs. Shows a progress
+        bar being updated with each chunk of processing from the thread after
+        it is started. Also disables other elements and changes the button's
+        function, to quit the program if it is pressed. When the thread ends,
+        it will automatically call the next function in the control flow.
+        """
         self.rp_box.setEnabled(False)
         self.it_box.setEnabled(False)
         self.start_button.setText("Abort/quit")
@@ -79,6 +142,18 @@ class ApplicationWindow(QMainWindow):
         self.thread.start()
 
     def add_graphs(self, xpos, ypos, dist, expt, rdis):
+        """
+        Receives the final signal emitted from the thread as arguments, adds
+        the graph(s) as widget(s) and positions the resized window.
+
+        Args:
+            xpos:   list of `x` coordinates for the random points.
+            ypos:   list of `y` coordinates for the random points.
+            dist:   list of distances between every pair of points.
+            expt:   list of distance expected at that point on the iteration.
+            rdis:   list of differences between distances when the number of
+                    replications is larger than 1.
+        """
         self.start_button.setText("Quit")
         if len(rdis) > 1:
             self.main_layout.addWidget(HistPlot(rdis))
