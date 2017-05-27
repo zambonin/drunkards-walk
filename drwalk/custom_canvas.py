@@ -52,20 +52,18 @@ class HistPlot(CustomCanvas):
     Draws a histogram with, at most, thirty classes, when there is more than
     one replication on the Monte Carlo simulation.
     """
-    def __init__(self, *data):
+    def __init__(self, data):
         """
         Initializes a HistPlot object with the following attributes:
 
-            data:   represents the raw data that will be plotted. Can be
-                    a n-uple, in which case it should be unpacked.
+            data:   represents the raw data that will be plotted.
 
         Calls the parent class constructor, edits the graph's title and
         draws a histogram with `data`.
         """
         super().__init__()
-        rdis, = data
-        self.axes.set_title("Histogram for $r \\times (d_n - i \sqrt{n})$")
-        self.axes.hist(rdis, min(int(len(rdis) ** .5), 30), edgecolor='k')
+        self.axes.set_title("Histogram for $r \\times (d_n - \sqrt{n})$")
+        self.axes.hist(data, min(int(len(data) ** .5), 30), edgecolor='k')
 
 
 class PathPlot(CustomCanvas):
@@ -96,7 +94,7 @@ class PathPlot(CustomCanvas):
 class DistPlot(CustomCanvas):
     """
     Draws a comparison graph between the distance walked after a random event
-    and the expected distance, which is i * √n for 0 < `i` ≤ `n` points.
+    and the expected distance, which is √i for 0 < `i` ≤ `n` points.
     """
     def __init__(self, *data):
         """
@@ -106,11 +104,16 @@ class DistPlot(CustomCanvas):
                     a n-uple, in which case it should be unpacked.
 
         Calls the parent class constructor, edits the graph's title and
-        draws the increasing distance graphs.
+        draws the increasing distance graphs, as well as a line representing
+        the difference between expected and walked distances.
         """
         super().__init__()
         dist, expt = data
+        ds = abs(dist[-1] - expt[-1])
         self.axes.set_title("Distance comparison")
-        rn, = self.axes.plot(dist, label='d')
-        ex, = self.axes.plot(expt, label='$i \\times \sqrt{n}$')
-        self.axes.legend(handles=[rn, ex], loc='upper left')
+        rn, = self.axes.plot(dist, label='$d_i - d_{i-1}$')
+        ex, = self.axes.plot(expt, label='$\sqrt{i}$')
+        df, = self.axes.plot(
+                [len(dist) * 1.01, len(expt) * 1.01], [dist[-1], expt[-1]],
+                label=f'$d_n - \sqrt{{n}} \\approx {ds:.2f}$')
+        self.axes.legend(handles=[rn, ex, df], loc=0, frameon=False)

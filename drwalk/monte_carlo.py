@@ -16,8 +16,8 @@ in a separate thread.
 """
 
 from math import cos, sin
+from numpy.random import randint
 from PyQt5.QtCore import QThread, pyqtSignal
-from random import randint
 
 
 class MonteCarloSim(QThread):
@@ -26,17 +26,15 @@ class MonteCarloSim(QThread):
 
         prr_signal: progress bar signal for replications (r), an integer
                     emitted every time a replication is calculated.
-        pri_signal: progress bar signal for iterations (i), an integer emitted
-                    every time an iteration is calculated, but only if
-                    the number of replications is trivial. Otherwise, emitting
-                    `r` * `i` signals would slow the execution terribly.
-        plt_signal: plotting signal, a tuple of lists with the final data:
+        pli_signal: plotting signal, a tuple of lists with the final data:
                     `x` and `y` coordinates for the random points, estimated
-                    and walked distances, and their differences.
+                    and walked distances.
+        plr_signal: plotting signal, a list containing the absolute value
+                    of the differences between estimated and walked distances.
     """
     prr_signal = pyqtSignal(int)
-    pri_signal = pyqtSignal(int)
-    plt_signal = pyqtSignal(list, list, list, list, list)
+    pli_signal = pyqtSignal(list, list, list, list)
+    plr_signal = pyqtSignal(list)
 
     def __init__(self, replications, iterations):
         """
@@ -46,32 +44,37 @@ class MonteCarloSim(QThread):
             iterations:     number of steps taken on the random walk.
         """
         super().__init__()
-        self.replications = replications
-        self.iterations = iterations
+        self.repl = replications
+        self.iter = iterations
 
     def run(self):
         """
         The starting point for the thread. Returning from this method will
         end the execution of the thread. Takes the attributes and creates
         lists that will be populated with random data and calculations
-        derived from it. Emits signals on every iteration.
+        derived from it. Emits signals on every replication.
         """
-        rdis = [0] * self.replications
+        if self.repl == 1:
+            xpos, ypos, dist, expt = ([0] * self.iter for _ in range(4))
+            angles = randint(0, 361, self.iter)
 
-        for r in range(self.replications):
-            xpos, ypos, dist, expt = ([0] * self.iterations for _ in range(4))
-
-            for i in range(self.iterations):
-                angle = randint(0, 360)
-                xpos[i] = xpos[i - 1] + (i + 1) * cos(angle)
-                ypos[i] = ypos[i - 1] + (i + 1) * sin(angle)
+            for i in range(self.iter):
+                xpos[i] = xpos[i - 1] + cos(angles[i])
+                ypos[i] = ypos[i - 1] + sin(angles[i])
                 dist[i] = (xpos[i] ** 2 + ypos[i] ** 2) ** .5
-                expt[i] = self.iterations * (i ** .5)
+                expt[i] = i ** .5
 
-                if self.replications == 1:
-                    self.pri_signal.emit(i + 1)
+            self.pli_signal.emit(xpos, ypos, dist, expt)
 
-            rdis[r] = abs(dist[-1] - expt[-1])
-            self.prr_signal.emit(r + 1)
+        else:
+            rdis = [0] * self.repl
+            angles = randint(0, 361, self.repl * self.iter)
 
-        self.plt_signal.emit(xpos, ypos, dist, expt, rdis)
+            for i in range(0, self.repl * self.iter, self.iter):
+                xpos = sum(map(cos, angles[i:i+self.iter]))
+                ypos = sum(map(sin, angles[i:i+self.iter]))
+                dist = (xpos ** 2 + ypos ** 2) ** .5
+                rdis[i // self.iter] = abs(dist - (self.iter ** .5))
+                self.prr_signal.emit((i // self.iter) + 1)
+
+            self.plr_signal.emit(rdis)

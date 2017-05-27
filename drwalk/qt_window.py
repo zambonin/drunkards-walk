@@ -14,8 +14,6 @@ modifications after specific triggers.
     * `PyQt5.QtWidgets.QGroupBox` provides a frame, a title on top
         and the ability of displaying various widgets inside itself.
     * `PyQt5.QtWidgets.QHBoxLayout` lines up widgets horizontally.
-    * `PyQt5.QtWidgets.QLabel` displays text or image without user
-        interaction.
     * `PyQt5.QtWidgets.QMainWindow` provides a main window.
     * `PyQt5.QtWidgets.QProgressBar` provides a progress bar, that gives
         the user an indication that the application is still running.
@@ -32,7 +30,7 @@ modifications after specific triggers.
 from .custom_canvas import DistPlot, HistPlot, PathPlot
 from .monte_carlo import MonteCarloSim
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout, QLabel, \
+from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout,         \
     QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
 
 
@@ -61,12 +59,12 @@ class AppWindow(QMainWindow):
         self.setFixedSize(QSize(225, 275))
 
         self.it_box = QSpinBox()
-        self.it_box.setRange(1, (1 << 31) - 1)
+        self.it_box.setRange(1, 1 << 24)
         self.it_box.setSingleStep(100)
         self.it_box.setValue(2000)
 
         self.rp_box = QSpinBox()
-        self.rp_box.setRange(1, (1 << 31) - 1)
+        self.rp_box.setRange(1, 1 << 24)
         self.rp_box.setSingleStep(10)
         self.rp_box.setValue(1)
 
@@ -135,38 +133,48 @@ class AppWindow(QMainWindow):
             self.prr_bar.setMaximum(r)
             self.thread.prr_signal.connect(self.prr_bar.setValue)
         else:
-            self.prr_bar.setMaximum(i)
-            self.thread.pri_signal.connect(self.prr_bar.setValue)
+            self.prr_bar.setRange(0, 0)
 
-        self.thread.plt_signal.connect(self.add_graphs)
+        self.thread.pli_signal.connect(self.it_graphs)
+        self.thread.plr_signal.connect(self.rp_graphs)
         self.thread.start()
 
-    def add_graphs(self, xpos, ypos, dist, expt, rdis):
+    def it_graphs(self, xpos, ypos, dist, expt):
         """
-        Receives the final signal emitted from the thread as arguments, adds
-        the graph(s) as widget(s) and positions the resized window.
+        Receives the final signal emitted from the thread when there are no
+        replications to be calculated and adds the graphs as widgets.
 
         Args:
             xpos:   list of `x` coordinates for the random points.
             ypos:   list of `y` coordinates for the random points.
             dist:   list of distances between every pair of points.
             expt:   list of distance expected at that point on the iteration.
-            rdis:   list of differences between distances when the number of
-                    replications is larger than 1.
+        """
+        self.main_layout.addWidget(PathPlot(xpos, ypos))
+        self.main_layout.addWidget(DistPlot(dist, expt))
+        self.setFixedSize(QSize(1152, 432))
+        self.resize_window()
+
+    def rp_graphs(self, rdis):
+        """
+        Receives the final signal emitted from the thread when there are
+        replications to be calculated and adds the graph as a widget.
+
+        Args:
+            rdis:   list of differences between expected and walked distances.
+        """
+        self.main_layout.addWidget(HistPlot(rdis))
+        self.setFixedSize(QSize(640, 432))
+        self.resize_window()
+
+    def resize_window(self):
+        """
+        Marks the progress bar as completed, resizes the window according
+        to the graphs created and adds a help message.
         """
         self.start_button.setText("Quit")
-        if len(rdis) > 1:
-            self.main_layout.addWidget(HistPlot(rdis))
-            self.setFixedSize(QSize(640, 432))
-        else:
-            self.main_layout.addWidget(PathPlot(xpos, ypos))
-            self.main_layout.addWidget(DistPlot(dist, expt))
-            self.setFixedSize(QSize(1152, 432))
-            dist_label = QLabel("Difference between distances: {:.2f} units"
-                                .format(rdis[-1]))
-            dist_label.setAlignment(Qt.AlignRight)
-            self.statusBar().addWidget(dist_label, 1)
-
+        self.prr_bar.setRange(0, 1)
+        self.prr_bar.setValue(1)
         resolution = QDesktopWidget().screenGeometry()
         self.move((resolution.width() / 2) - (self.frameSize().width() / 2),
                   (resolution.height() / 2) - (self.frameSize().height() / 2))
