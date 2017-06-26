@@ -73,8 +73,7 @@ class MonteCarloSim(QThread):
             for i in range(0, self.repl * self.iter, self.iter):
                 xpos = sum(map(cos, angles[i:i+self.iter]))
                 ypos = sum(map(sin, angles[i:i+self.iter]))
-                dist = (xpos ** 2 + ypos ** 2) ** .5
-                rdis[i // self.iter] = abs(dist - (self.iter ** .5))
+                rdis[i // self.iter] = (xpos ** 2 + ypos ** 2) ** .5
                 self.prr_signal.emit((i // self.iter) + 1)
 
             self.plr_signal.emit(rdis)
