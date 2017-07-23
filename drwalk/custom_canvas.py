@@ -62,7 +62,7 @@ class HistPlot(CustomCanvas):
         draws a histogram with `data`.
         """
         super().__init__()
-        self.axes.set_title("Histogram for $r \\times (d_n - \sqrt{n})$")
+        self.axes.set_title("Histogram for $r \\times (d_n - \\sqrt{n})$")
         self.axes.hist(data, min(int(len(data) ** .5), 30), edgecolor='k')
 
 
@@ -109,11 +109,11 @@ class DistPlot(CustomCanvas):
         """
         super().__init__()
         dist, expt = data
-        ds = abs(dist[-1] - expt[-1])
+        final_dist = abs(dist[-1] - expt[-1])
         self.axes.set_title("Distance comparison")
-        rn, = self.axes.plot(dist, label='$d_i - d_{i-1}$')
-        ex, = self.axes.plot(expt, label='$\sqrt{i}$')
-        df, = self.axes.plot(
-                [len(dist) * 1.01, len(expt) * 1.01], [dist[-1], expt[-1]],
-                label=f'$d_n - \sqrt{{n}} \\approx {ds:.2f}$')
-        self.axes.legend(handles=[rn, ex, df], loc=0, frameon=False)
+        comps, = self.axes.plot(dist, label='$d_i - d_{i-1}$')
+        expct, = self.axes.plot(expt, label='$\\sqrt{i}$')
+        diffs, = self.axes.plot(
+            [len(dist) * 1.01, len(expt) * 1.01], [dist[-1], expt[-1]],
+            label=f'$d_n - \\sqrt{{n}} \\approx {final_dist:.2f}$')
+        self.axes.legend(handles=[comps, expct, diffs], loc=0, frameon=False)

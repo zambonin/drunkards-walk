@@ -27,11 +27,11 @@ modifications after specific triggers.
         objects.
 """
 
-from .custom_canvas import DistPlot, HistPlot, PathPlot
-from .monte_carlo import MonteCarloSim
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout,         \
     QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
+from .custom_canvas import DistPlot, HistPlot, PathPlot
+from .monte_carlo import MonteCarloSim
 
 
 class AppWindow(QMainWindow):
@@ -57,6 +57,7 @@ class AppWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Random Walk Simulator")
         self.setFixedSize(QSize(225, 275))
+        self.thread = None
 
         self.it_box = QSpinBox()
         self.it_box.setRange(1, 1 << 24)
@@ -98,7 +99,7 @@ class AppWindow(QMainWindow):
         self.main_layout.addWidget(parameters)
         self.setCentralWidget(self.main_widget)
 
-    def keyPressEvent(self, e):
+    def keypress_event(self, event):
         """
         Handles key presses while the window is focused. One can start the
         computing by pressing Enter, and quit at any time by pressing
@@ -107,9 +108,9 @@ class AppWindow(QMainWindow):
         Args:
             e:  an abstract object representing an event.
         """
-        if e.key() == Qt.Key_Return:
+        if event.key() == Qt.Key_Return:
             self.process_data()
-        elif e.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key_Escape:
             self.close()
 
     def process_data(self):
@@ -126,11 +127,11 @@ class AppWindow(QMainWindow):
         self.start_button.disconnect()
         self.start_button.clicked.connect(self.close)
 
-        r, i = self.rp_box.value(), self.it_box.value()
-        self.thread = MonteCarloSim(r, i)
+        rep, ite = self.rp_box.value(), self.it_box.value()
+        self.thread = MonteCarloSim(rep, ite)
 
-        if r != 1:
-            self.prr_bar.setMaximum(r)
+        if rep != 1:
+            self.prr_bar.setMaximum(rep)
             self.thread.prr_signal.connect(self.prr_bar.setValue)
         else:
             self.prr_bar.setRange(0, 0)
@@ -179,4 +180,4 @@ class AppWindow(QMainWindow):
         self.move((resolution.width() / 2) - (self.frameSize().width() / 2),
                   (resolution.height() / 2) - (self.frameSize().height() / 2))
         self.statusBar().showMessage(
-                'Left click and drag to pan, right click and drag to zoom')
+            'Left click and drag to pan, right click and drag to zoom')

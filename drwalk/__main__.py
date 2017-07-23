@@ -10,11 +10,11 @@ and compares those with the expected distance after a number `n` of steps.
         control flow and main settings for the GUI application.
 """
 
+from sys import argv
 from PyQt5.QtWidgets import QApplication
 from .qt_window import AppWindow
-from sys import argv, exit
 
-app = QApplication(argv)
-aw = AppWindow()
-aw.show()
-exit(app.exec_())
+APP = QApplication(argv)
+WINDOW = AppWindow()
+WINDOW.show()
+exit(APP.exec_())
