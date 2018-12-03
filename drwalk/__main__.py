@@ -11,7 +11,9 @@ and compares those with the expected distance after a number `n` of steps.
 """
 
 from sys import argv
+
 from PyQt5.QtWidgets import QApplication
+
 from .qt_window import AppWindow
 
 APP = QApplication(argv)

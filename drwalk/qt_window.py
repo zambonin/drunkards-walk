@@ -28,8 +28,9 @@ modifications after specific triggers.
 """
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout,         \
+from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout, \
     QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
+
 from .custom_canvas import DistPlot, HistPlot, PathPlot
 from .monte_carlo import MonteCarloSim
 
@@ -39,6 +40,7 @@ class AppWindow(QMainWindow):
     The project's custom window, with responsibilities such as displaying
     graphics and handling user input.
     """
+
     def __init__(self):
         """
         Initializes the AppWindow object with the following attributes:
@@ -54,7 +56,7 @@ class AppWindow(QMainWindow):
         as its initial size, ranges and default values for the spin boxes,
         actions and layouts for the widgets.
         """
-        super().__init__()
+        super().__init__(flags=Qt.WindowFlags())
         self.setWindowTitle("Random Walk Simulator")
         self.setFixedSize(QSize(225, 275))
         self.thread = None
@@ -69,7 +71,7 @@ class AppWindow(QMainWindow):
         self.rp_box.setSingleStep(10)
         self.rp_box.setValue(1)
 
-        self.start_button = QPushButton("Start", self, default=True)
+        self.start_button = QPushButton("Start", self)
         self.start_button.clicked.connect(self.process_data)
 
         self.prr_bar = QProgressBar()
@@ -77,26 +79,26 @@ class AppWindow(QMainWindow):
 
         it_group = QGroupBox("Number of iterations (i)")
         it_layout = QHBoxLayout(it_group)
-        it_layout.addWidget(self.it_box)
+        it_layout.addWidget(self.it_box, alignment=Qt.AlignBaseline)
 
         rp_group = QGroupBox("Number of replications (r)")
         rp_layout = QHBoxLayout(rp_group)
-        rp_layout.addWidget(self.rp_box)
+        rp_layout.addWidget(self.rp_box, alignment=Qt.AlignBaseline)
 
         pr_group = QGroupBox("Progress bar (r)")
         pr_layout = QHBoxLayout(pr_group)
-        pr_layout.addWidget(self.prr_bar)
-        pr_layout.addWidget(self.start_button)
+        pr_layout.addWidget(self.prr_bar, alignment=Qt.AlignBaseline)
+        pr_layout.addWidget(self.start_button, alignment=Qt.AlignBaseline)
 
         parameters = QGroupBox("Simulation info and parameters")
         param_layout = QVBoxLayout(parameters)
-        param_layout.addWidget(it_group)
-        param_layout.addWidget(rp_group)
-        param_layout.addWidget(pr_group)
+        param_layout.addWidget(it_group, alignment=Qt.AlignBaseline)
+        param_layout.addWidget(rp_group, alignment=Qt.AlignBaseline)
+        param_layout.addWidget(pr_group, alignment=Qt.AlignBaseline)
 
-        self.main_widget = QWidget(self)
+        self.main_widget = QWidget(self, flags=Qt.WindowFlags())
         self.main_layout = QHBoxLayout(self.main_widget)
-        self.main_layout.addWidget(parameters)
+        self.main_layout.addWidget(parameters, alignment=Qt.AlignAbsolute)
         self.setCentralWidget(self.main_widget)
 
     def keypress_event(self, event):
@@ -106,7 +108,7 @@ class AppWindow(QMainWindow):
         Esc or Enter.
 
         Args:
-            e:  an abstract object representing an event.
+            event:  an abstract object representing an event.
         """
         if event.key() == Qt.Key_Return:
             self.process_data()
@@ -151,8 +153,10 @@ class AppWindow(QMainWindow):
             dist:   list of distances between every pair of points.
             expt:   list of distance expected at that point on the iteration.
         """
-        self.main_layout.addWidget(PathPlot(xpos, ypos))
-        self.main_layout.addWidget(DistPlot(dist, expt))
+        self.main_layout.addWidget(PathPlot(xpos, ypos),
+                                   alignment=Qt.AlignBaseline)
+        self.main_layout.addWidget(DistPlot(dist, expt),
+                                   alignment=Qt.AlignBaseline)
         self.setFixedSize(QSize(1152, 432))
         self.resize_window()
 
@@ -164,7 +168,7 @@ class AppWindow(QMainWindow):
         Args:
             rdis:   list of differences between expected and walked distances.
         """
-        self.main_layout.addWidget(HistPlot(rdis))
+        self.main_layout.addWidget(HistPlot(rdis), alignment=Qt.AlignBaseline)
         self.setFixedSize(QSize(640, 432))
         self.resize_window()
 

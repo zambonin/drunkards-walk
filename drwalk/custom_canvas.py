@@ -20,8 +20,8 @@ examples [1].
 [1] http://matplotlib.org/examples/user_interfaces/embedding_in_qt5.html
 """
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as Toolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FCanvas
 from matplotlib.pyplot import subplots
 
 
@@ -29,6 +29,7 @@ class CustomCanvas(FCanvas):
     """
     The parent class for the figures rendered as widgets on the Qt program.
     """
+
     def __init__(self):
         """
         Initializes a CustomCanvas object with the following attributes:
@@ -52,6 +53,7 @@ class HistPlot(CustomCanvas):
     Draws a histogram with, at most, thirty classes, when there is more than
     one replication on the Monte Carlo simulation.
     """
+
     def __init__(self, data):
         """
         Initializes a HistPlot object with the following attributes:
@@ -71,6 +73,7 @@ class PathPlot(CustomCanvas):
     Draws a random walk if there are no replications to be made. Plotting of
     more than a million points may be slow.
     """
+
     def __init__(self, *data):
         """
         Initializes a PathPlot object with the following attributes:
@@ -96,6 +99,7 @@ class DistPlot(CustomCanvas):
     Draws a comparison graph between the distance walked after a random event
     and the expected distance, which is √i for 0 < `i` ≤ `n` points.
     """
+
     def __init__(self, *data):
         """
         Initializes a DistPlot object with the following attributes:

@@ -16,7 +16,8 @@ in a separate thread.
 """
 
 from math import cos, sin
-from numpy.random import randint
+
+import numpy.random
 from PyQt5.QtCore import QThread, pyqtSignal
 
 
@@ -56,7 +57,7 @@ class MonteCarloSim(QThread):
         """
         if self.repl == 1:
             xpos, ypos, dist, expt = ([0] * self.iter for _ in range(4))
-            angles = randint(0, 361, self.iter)
+            angles = numpy.random.randint(0, 361, self.iter)
 
             for i in range(self.iter):
                 xpos[i] = xpos[i - 1] + cos(angles[i])
@@ -68,11 +69,11 @@ class MonteCarloSim(QThread):
 
         else:
             rdis = [0] * self.repl
-            angles = randint(0, 361, self.repl * self.iter)
+            angles = numpy.random.randint(0, 361, self.repl * self.iter)
 
             for i in range(0, self.repl * self.iter, self.iter):
-                xpos = sum(map(cos, angles[i:i+self.iter]))
-                ypos = sum(map(sin, angles[i:i+self.iter]))
+                xpos = sum(map(cos, angles[i:i + self.iter]))
+                ypos = sum(map(sin, angles[i:i + self.iter]))
                 rdis[i // self.iter] = (xpos ** 2 + ypos ** 2) ** .5
                 self.prr_signal.emit((i // self.iter) + 1)
 
