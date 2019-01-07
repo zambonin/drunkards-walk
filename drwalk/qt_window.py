@@ -27,9 +27,20 @@ modifications after specific triggers.
         objects.
 """
 
+from __future__ import absolute_import, division
+
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QDesktopWidget, QGroupBox, QHBoxLayout, \
-    QMainWindow, QProgressBar, QPushButton, QSpinBox, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import (
+    QDesktopWidget,
+    QGroupBox,
+    QHBoxLayout,
+    QMainWindow,
+    QProgressBar,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .custom_canvas import DistPlot, HistPlot, PathPlot
 from .monte_carlo import MonteCarloSim
@@ -153,10 +164,12 @@ class AppWindow(QMainWindow):
             dist:   list of distances between every pair of points.
             expt:   list of distance expected at that point on the iteration.
         """
-        self.main_layout.addWidget(PathPlot(xpos, ypos),
-                                   alignment=Qt.AlignBaseline)
-        self.main_layout.addWidget(DistPlot(dist, expt),
-                                   alignment=Qt.AlignBaseline)
+        self.main_layout.addWidget(
+            PathPlot(xpos, ypos), alignment=Qt.AlignBaseline
+        )
+        self.main_layout.addWidget(
+            DistPlot(dist, expt), alignment=Qt.AlignBaseline
+        )
         self.setFixedSize(QSize(1152, 432))
         self.resize_window()
 
@@ -181,7 +194,10 @@ class AppWindow(QMainWindow):
         self.prr_bar.setRange(0, 1)
         self.prr_bar.setValue(1)
         resolution = QDesktopWidget().screenGeometry()
-        self.move((resolution.width() / 2) - (self.frameSize().width() / 2),
-                  (resolution.height() / 2) - (self.frameSize().height() / 2))
+        self.move(
+            (resolution.width() / 2) - (self.frameSize().width() / 2),
+            (resolution.height() / 2) - (self.frameSize().height() / 2),
+        )
         self.statusBar().showMessage(
-            'Left click and drag to pan, right click and drag to zoom')
+            "Left click and drag to pan, right click and drag to zoom"
+        )

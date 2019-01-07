@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# pylint: disable=R0903
 
 """monte_carlo.py
 
@@ -15,6 +16,7 @@ in a separate thread.
 [1] http://blog.wolfram.com/2011/06/08/
 """
 
+from __future__ import absolute_import
 from math import cos, sin
 
 import numpy.random
@@ -33,6 +35,7 @@ class MonteCarloSim(QThread):
         plr_signal: plotting signal, a list containing the absolute value
                     of the differences between estimated and walked distances.
     """
+
     prr_signal = pyqtSignal(int)
     pli_signal = pyqtSignal(list, list, list, list)
     plr_signal = pyqtSignal(list)
@@ -62,8 +65,8 @@ class MonteCarloSim(QThread):
             for i in range(self.iter):
                 xpos[i] = xpos[i - 1] + cos(angles[i])
                 ypos[i] = ypos[i - 1] + sin(angles[i])
-                dist[i] = (xpos[i] ** 2 + ypos[i] ** 2) ** .5
-                expt[i] = i ** .5
+                dist[i] = (xpos[i] ** 2 + ypos[i] ** 2) ** 0.5
+                expt[i] = i ** 0.5
 
             self.pli_signal.emit(xpos, ypos, dist, expt)
 
@@ -72,9 +75,9 @@ class MonteCarloSim(QThread):
             angles = numpy.random.randint(0, 361, self.repl * self.iter)
 
             for i in range(0, self.repl * self.iter, self.iter):
-                xpos = sum(map(cos, angles[i:i + self.iter]))
-                ypos = sum(map(sin, angles[i:i + self.iter]))
-                rdis[i // self.iter] = (xpos ** 2 + ypos ** 2) ** .5
+                xpos = sum(map(cos, angles[i : i + self.iter]))
+                ypos = sum(map(sin, angles[i : i + self.iter]))
+                rdis[i // self.iter] = (xpos ** 2 + ypos ** 2) ** 0.5
                 self.prr_signal.emit((i // self.iter) + 1)
 
             self.plr_signal.emit(rdis)

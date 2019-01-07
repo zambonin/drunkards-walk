@@ -10,6 +10,7 @@ and compares those with the expected distance after a number `n` of steps.
         control flow and main settings for the GUI application.
 """
 
+from __future__ import absolute_import
 from sys import argv
 
 from PyQt5.QtWidgets import QApplication
